@@ -2,6 +2,6 @@
         xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd"
 >
     <event name="hyva_config_generate_before">
-        <observer name="Yireo_HyvaCheckoutUtils" instance="Yireo\HyvaCheckoutUtils\Observer\RegisterModuleForHyvaConfig"/>
+        <observer name="Yireo_HyvaThemeAutoRegistration" instance="Yireo\HyvaThemeAutoRegistration\Observer\RegisterModuleForHyvaConfig"/>
     </event>
 </config>

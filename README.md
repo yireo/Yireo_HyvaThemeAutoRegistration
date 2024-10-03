@@ -1,4 +1,4 @@
-# Yireo HyvaCheckoutUtils
+# Yireo HyvaThemeAutoRegistration
 **Magento 2 module to make it easier to register a custom `tailwind.config.js` file of your own module in the global Hyvä Themes Tailwind configuration**
 
 ### Background
@@ -14,15 +14,12 @@ Next, add the following DI configuration to your module its `etc/di.xml` file (a
 <?xml version="1.0"?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
-    <type name="Yireo\HyvaCheckoutUtils\Observer\RegisterModuleForHyvaConfig">
+    <type name="Yireo\HyvaThemeAutoRegistration\Observer\RegisterModuleForHyvaConfig">
         <arguments>
             <argument name="moduleNames" xsi:type="array">
-                <item name="Foo_Bar" xsi:type="object">Foo_Bar</item>
+                <item name="Foo_Bar" xsi:type="string">Foo_Bar</item>
             </argument>
         </arguments>
     </type>
 </config>
 ```
-
-### Todo
-Rename this module from `Yireo_HyvaCheckoutUtils` to something like `Yireo_HyvaThemesAutoRegistration` because this has zero to do with the checkout.

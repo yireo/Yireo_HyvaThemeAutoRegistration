@@ -1,6 +1,6 @@
 {
-  "name": "yireo/magento2-hyva-checkout-utils",
-  "version": "1.0.1",
+  "name": "yireo/magento2-hyva-theme-auto-registration",
+  "version": "1.0.2",
   "description": "N/A",
   "type": "magento2-module",
   "require": {
@@ -14,7 +14,7 @@
       "registration.php"
     ],
     "psr-4": {
-      "Yireo\\HyvaCheckoutUtils\\": ""
+      "Yireo\\HyvaThemeAutoRegistration\\": ""
     }
   }
 }
