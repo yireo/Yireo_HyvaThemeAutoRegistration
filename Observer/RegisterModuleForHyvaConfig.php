@@ -20,7 +20,8 @@ class RegisterModuleForHyvaConfig implements ObserverInterface
         private ComponentRegistrar $componentRegistrar,
         private ModuleList $moduleList,
         private HyvaFiles $hyvaFiles,
-        private array $moduleNames = []
+        private array $moduleNames = [],
+        private array $modulePrefixes = [],
     )
     {}
 
@@ -34,6 +35,7 @@ class RegisterModuleForHyvaConfig implements ObserverInterface
         $event = $observer->getEvent();
         $config = $event->getData('config');
         $extensions = $config->hasData('extensions') ? $config->getData('extensions') : [];
+
 
         foreach ($this->moduleNames as $moduleName) {
             $path = $this->componentRegistrar->getPath(ComponentRegistrar::MODULE, $moduleName);
@@ -59,6 +61,12 @@ class RegisterModuleForHyvaConfig implements ObserverInterface
 
     private function allowModuleName(string $moduleName): bool
     {
-        return (bool) preg_match('/^(Yireo|YireoTraining)_/', $moduleName);
+        foreach ($this->modulePrefixes as $modulePrefix) {
+            if (str_contains($moduleName, $modulePrefix)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

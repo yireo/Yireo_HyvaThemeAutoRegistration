@@ -1,20 +1,21 @@
 {
-  "name": "yireo/magento2-hyva-theme-auto-registration",
-  "version": "1.0.2",
-  "description": "N/A",
-  "type": "magento2-module",
-  "require": {
-    "magento/framework": "*"
-  },
-  "license": [
-    "OSL-3.0"
-  ],
-  "autoload": {
-    "files": [
-      "registration.php"
+    "name": "yireo/magento2-hyva-theme-auto-registration",
+    "version": "1.0.3",
+    "description": "Automatically include modules in the Hyvä Theme registration",
+    "type": "magento2-module",
+    "require": {
+        "magento/framework": "^102.0|^103.0",
+        "php": "^8.1"
+    },
+    "license": [
+        "OSL-3.0"
     ],
-    "psr-4": {
-      "Yireo\\HyvaThemeAutoRegistration\\": ""
+    "autoload": {
+        "files": [
+            "registration.php"
+        ],
+        "psr-4": {
+            "Yireo\\HyvaThemeAutoRegistration\\": ""
+        }
     }
-  }
 }

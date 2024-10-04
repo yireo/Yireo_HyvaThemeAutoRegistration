@@ -23,3 +23,19 @@ Next, add the following DI configuration to your module its `etc/di.xml` file (a
     </type>
 </config>
 ```
+
+Alternatively, you can include all your modules by configuring a module prefix:
+
+```xml
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <type name="Yireo\HyvaThemeAutoRegistration\Observer\RegisterModuleForHyvaConfig">
+        <arguments>
+            <argument name="modulePrefixes" xsi:type="array">
+                <item name="Foo_" xsi:type="string">Foo_</item>
+            </argument>
+        </arguments>
+    </type>
+</config>
+```
