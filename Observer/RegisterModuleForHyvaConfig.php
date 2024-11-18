@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Yireo\HyvaThemeAutoRegistration\Observer;
 
+use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Component\ComponentRegistrar;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
@@ -18,12 +19,13 @@ class RegisterModuleForHyvaConfig implements ObserverInterface
      */
     public function __construct(
         private ComponentRegistrar $componentRegistrar,
+        private DirectoryList $directoryList,
         private ModuleList $moduleList,
         private HyvaFiles $hyvaFiles,
         private array $moduleNames = [],
         private array $modulePrefixes = [],
-    )
-    {}
+    ) {
+    }
 
     /**
      * @param Observer $event
@@ -36,10 +38,8 @@ class RegisterModuleForHyvaConfig implements ObserverInterface
         $config = $event->getData('config');
         $extensions = $config->hasData('extensions') ? $config->getData('extensions') : [];
 
-
         foreach ($this->moduleNames as $moduleName) {
-            $path = $this->componentRegistrar->getPath(ComponentRegistrar::MODULE, $moduleName);
-            $extensions[] = ['src' => str_replace(BP, '', $path)];
+            $this->addModule($moduleName, $extensions);
         }
 
         foreach ($this->moduleList->getAll() as $moduleData) {
@@ -52,8 +52,7 @@ class RegisterModuleForHyvaConfig implements ObserverInterface
                 continue;
             }
 
-            $path = $this->componentRegistrar->getPath(ComponentRegistrar::MODULE, $moduleName);
-            $extensions[] = ['src' => str_replace(BP, '', $path)];
+            $this->addModule($moduleName, $extensions);
         }
 
         $config->setData('extensions', $extensions);
@@ -68,5 +67,37 @@ class RegisterModuleForHyvaConfig implements ObserverInterface
         }
 
         return false;
+    }
+
+    private function getModulePath(string $moduleName): string
+    {
+        $path = $this->componentRegistrar->getPath(ComponentRegistrar::MODULE, $moduleName);
+        if (false === strstr($this->directoryList->getRoot(), $path)) {
+            return $path;
+        }
+
+        return trim(str_replace(BP, '', $path), '/');
+    }
+
+    private function isAlreadyDefined(string $path, array $extensions = []): bool
+    {
+        foreach ($extensions as $extension) {
+            if ($extension['src'] === $path) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function addModule(string $moduleName, array &$extensions = [])
+    {
+
+        $modulePath = $this->getModulePath($moduleName);
+        if ($this->isAlreadyDefined($modulePath, $extensions)) {
+            return;
+        }
+
+        $extensions[] = ['src' => $modulePath];
     }
 }
