@@ -76,7 +76,11 @@ class RegisterModuleForHyvaConfig implements ObserverInterface
             return $path;
         }
 
-        return trim(str_replace(BP, '', $path), '/');
+        if (defined('BP')) {
+            $path = str_replace(BP, '', $path);
+        }
+
+        return trim($path, '/');
     }
 
     private function isAlreadyDefined(string $path, array $extensions = []): bool
