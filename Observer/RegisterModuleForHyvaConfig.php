@@ -72,7 +72,7 @@ class RegisterModuleForHyvaConfig implements ObserverInterface
     private function getModulePath(string $moduleName): string
     {
         $path = $this->componentRegistrar->getPath(ComponentRegistrar::MODULE, $moduleName);
-        if (false === strstr($this->directoryList->getRoot(), $path)) {
+        if (false === strstr($path, $this->directoryList->getRoot())) {
             return $path;
         }
 
