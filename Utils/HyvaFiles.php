@@ -17,11 +17,13 @@ class HyvaFiles
     public function getFiles(): array
     {
         return [
+            'view/base/tailwind/tailwind.config.js',
+            'view/base/tailwind/tailwind-source.css',
             'view/frontend/tailwind/tailwind.config.js',
             'view/frontend/tailwind/tailwind-source.css'
         ];
     }
-    
+
     /**
      * @param string $moduleName
      * @return bool
@@ -35,7 +37,7 @@ class HyvaFiles
                 return true;
             }
         }
-        
+
         return false;
     }
 }
