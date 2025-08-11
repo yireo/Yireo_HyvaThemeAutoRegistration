@@ -24,6 +24,7 @@ class RegisterModuleForHyvaConfig implements ObserverInterface
         private HyvaFiles $hyvaFiles,
         private array $moduleNames = [],
         private array $modulePrefixes = [],
+        private array $skipModules = [],
     ) {
     }
 
@@ -96,6 +97,9 @@ class RegisterModuleForHyvaConfig implements ObserverInterface
 
     private function addModule(string $moduleName, array &$extensions = [])
     {
+        if (in_array($moduleName, $this->skipModules)) {
+            return;
+        }
 
         $modulePath = $this->getModulePath($moduleName);
         if ($this->isAlreadyDefined($modulePath, $extensions)) {
