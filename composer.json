@@ -1,7 +1,7 @@
 {
     "name": "yireo/magento2-hyva-theme-auto-registration",
     "version": "1.0.7",
-    "description": "Automatically include modules in the Hyvä Theme registration",
+    "description": "Automatically include modules in the Hyv\u00e4 Theme registration",
     "type": "magento2-module",
     "require": {
         "magento/framework": "^102.0|^103.0",
