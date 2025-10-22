@@ -1,6 +1,6 @@
 {
     "name": "yireo/magento2-hyva-theme-auto-registration",
-    "version": "1.0.6",
+    "version": "1.0.7",
     "description": "Automatically include modules in the Hyvä Theme registration",
     "type": "magento2-module",
     "require": {
