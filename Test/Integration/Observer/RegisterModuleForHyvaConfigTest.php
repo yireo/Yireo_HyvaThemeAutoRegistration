@@ -4,14 +4,12 @@ declare(strict_types=1);
 
 namespace Yireo\HyvaThemeAutoRegistration\Test\Integration\Observer;
 
-use Magento\Framework\App\Cache;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Component\ComponentRegistrar;
 use Magento\Framework\DataObject;
 use Magento\Framework\Event\ConfigInterface as EventManagerConfig;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Module\ModuleList;
-use Magento\Framework\Module\Status;
 use Magento\TestFramework\Fixture\AppArea;
 use Magento\TestFramework\Fixture\AppIsolation;
 use Magento\TestFramework\Fixture\ComponentsDir;
@@ -30,10 +28,15 @@ class RegisterModuleForHyvaConfigTest extends TestCase
     #[ComponentsDir('../../../../vendor/yireo/magento2-hyva-theme-auto-registration/Test/Integration/_modules')]
     public function testIfObserverIncludesYireoBasedModules()
     {
-        $this->enableModules(['Yireo_Test1']);
+        $this->assertModulesAreRegistered(['Yireo_Test1']);
+
+        $moduleList = $this->createMock(ModuleList::class);
+        $moduleList->method('getAll')->willReturn(['Yireo_Test1' => ['name' => 'Yireo_Test1']]);
 
         $observer = $this->getObserver();
-        $target = ObjectManager::getInstance()->get(RegisterModuleForHyvaConfig::class);
+        $target = ObjectManager::getInstance()->create(RegisterModuleForHyvaConfig::class, [
+            'moduleList' => $moduleList
+        ]);
 
         $target->execute($observer);
 
@@ -44,7 +47,7 @@ class RegisterModuleForHyvaConfigTest extends TestCase
     #[ComponentsDir('../../../../vendor/yireo/magento2-hyva-theme-auto-registration/Test/Integration/_modules')]
     public function testIfObserverIncludesManualModuleNames()
     {
-        $this->enableModules(['Foo_Bar1']);
+        $this->assertModulesAreRegistered(['Foo_Bar1']);
 
         $observer = $this->getObserver();
         $target = ObjectManager::getInstance()->create(RegisterModuleForHyvaConfig::class, [
@@ -70,6 +73,9 @@ class RegisterModuleForHyvaConfigTest extends TestCase
     {
         $componentRegistrar = ObjectManager::getInstance()->get(ComponentRegistrar::class);
         $modulePath = $componentRegistrar->getPath('module', $moduleName);
+        if (str_starts_with($modulePath, BP)) {
+            $modulePath = trim(substr($modulePath, strlen(BP)), '/');
+        }
 
         $isModuleFound = false;
         $extensions = $observer->getEvent()->getConfig()['extensions'];
@@ -83,18 +89,12 @@ class RegisterModuleForHyvaConfigTest extends TestCase
         $this->assertTrue($isModuleFound, var_export($extensions, true));
     }
 
-    private function enableModules(array $moduleNames)
+    private function assertModulesAreRegistered(array $moduleNames)
     {
-        $moduleStatus = ObjectManager::getInstance()->get(Status::class);
-        $moduleStatus->setIsEnabled(true, $moduleNames);
-
-        $cache = ObjectManager::getInstance()->get(Cache::class);
-        $cache->clean();
-
-        $moduleList = ObjectManager::getInstance()->get(ModuleList::class);
+        $componentRegistrar = ObjectManager::getInstance()->get(ComponentRegistrar::class);
         foreach ($moduleNames as $moduleName) {
-            $moduleDefinition = $moduleList->getOne($moduleName);
-            $this->assertNotEmpty($moduleDefinition, 'Module "'.$moduleName.'" was not found');
+            $modulePath = $componentRegistrar->getPath(ComponentRegistrar::MODULE, $moduleName);
+            $this->assertNotEmpty($modulePath, 'Module "'.$moduleName.'" was not registered');
         }
     }
 
