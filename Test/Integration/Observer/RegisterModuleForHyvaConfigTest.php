@@ -9,6 +9,7 @@ use Magento\Framework\Component\ComponentRegistrar;
 use Magento\Framework\DataObject;
 use Magento\Framework\Event\ConfigInterface as EventManagerConfig;
 use Magento\Framework\Event\Observer;
+use Magento\Framework\Filesystem\DirectoryList;
 use Magento\Framework\Module\ModuleList;
 use Magento\TestFramework\Fixture\AppArea;
 use Magento\TestFramework\Fixture\AppIsolation;
@@ -73,8 +74,9 @@ class RegisterModuleForHyvaConfigTest extends TestCase
     {
         $componentRegistrar = ObjectManager::getInstance()->get(ComponentRegistrar::class);
         $modulePath = $componentRegistrar->getPath('module', $moduleName);
-        if (str_starts_with($modulePath, BP)) {
-            $modulePath = trim(substr($modulePath, strlen(BP)), '/');
+        $rootPath = ObjectManager::getInstance()->get(DirectoryList::class)->getRoot();
+        if (str_starts_with($modulePath, $rootPath)) {
+            $modulePath = trim(substr($modulePath, strlen($rootPath)), '/');
         }
 
         $isModuleFound = false;
