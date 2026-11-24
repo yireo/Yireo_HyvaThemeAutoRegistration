@@ -61,9 +61,110 @@ class RegisterModuleForHyvaConfigTest extends TestCase
         $this->assertObserverEventContainsModule($observer, 'Foo_Bar1');
     }
 
-    private function getObserver(): Observer
+    #[ComponentsDir('../../../../vendor/yireo/magento2-hyva-theme-auto-registration/Test/Integration/_modules')]
+    public function testIfObserverOnlyMatchesPrefixAtStartOfModuleName()
     {
-        $config = new DataObject(['extensions' => []]);
+        $this->assertModulesAreRegistered(['Yireo_Test1', 'AcmeYireo_Test2']);
+
+        $moduleList = $this->createMock(ModuleList::class);
+        $moduleList->method('getAll')->willReturn([
+            'Yireo_Test1' => ['name' => 'Yireo_Test1'],
+            'AcmeYireo_Test2' => ['name' => 'AcmeYireo_Test2'],
+        ]);
+
+        $observer = $this->getObserver();
+        $target = ObjectManager::getInstance()->create(RegisterModuleForHyvaConfig::class, [
+            'moduleList' => $moduleList,
+            'modulePrefixes' => ['Yireo_'],
+        ]);
+
+        $target->execute($observer);
+
+        $this->assertObserverEventContainsModule($observer, 'Yireo_Test1');
+        $this->assertObserverEventNotContainsModule($observer, 'AcmeYireo_Test2');
+    }
+
+    #[ComponentsDir('../../../../vendor/yireo/magento2-hyva-theme-auto-registration/Test/Integration/_modules')]
+    public function testIfObserverIgnoresEmptyModulePrefix()
+    {
+        $this->assertModulesAreRegistered(['Yireo_Test1']);
+
+        $moduleList = $this->createMock(ModuleList::class);
+        $moduleList->method('getAll')->willReturn(['Yireo_Test1' => ['name' => 'Yireo_Test1']]);
+
+        $observer = $this->getObserver();
+        $target = ObjectManager::getInstance()->create(RegisterModuleForHyvaConfig::class, [
+            'moduleList' => $moduleList,
+            'modulePrefixes' => [''],
+        ]);
+
+        $target->execute($observer);
+
+        $this->assertEmpty($observer->getEvent()->getConfig()['extensions']);
+    }
+
+    public function testIfObserverSkipsUnregisteredModuleNames()
+    {
+        $moduleList = $this->createMock(ModuleList::class);
+        $moduleList->method('getAll')->willReturn([]);
+
+        $observer = $this->getObserver();
+        $target = ObjectManager::getInstance()->create(RegisterModuleForHyvaConfig::class, [
+            'moduleList' => $moduleList,
+            'moduleNames' => ['Missing_Module'],
+        ]);
+
+        $target->execute($observer);
+
+        $this->assertEmpty($observer->getEvent()->getConfig()['extensions']);
+    }
+
+    #[ComponentsDir('../../../../vendor/yireo/magento2-hyva-theme-auto-registration/Test/Integration/_modules')]
+    public function testIfObserverHandlesExtensionsWithoutSrc()
+    {
+        $this->assertModulesAreRegistered(['Foo_Bar1']);
+
+        $moduleList = $this->createMock(ModuleList::class);
+        $moduleList->method('getAll')->willReturn([]);
+
+        $observer = $this->getObserver([['foo' => 'bar'], 'invalid']);
+        $target = ObjectManager::getInstance()->create(RegisterModuleForHyvaConfig::class, [
+            'moduleList' => $moduleList,
+            'moduleNames' => ['Foo_Bar1'],
+        ]);
+
+        $target->execute($observer);
+
+        $this->assertObserverEventContainsModule($observer, 'Foo_Bar1');
+    }
+
+    public function testIfObserverIgnoresInvalidConfig()
+    {
+        $observer = ObjectManager::getInstance()->create(Observer::class);
+        $observer->setEvent(new DataObject(['config' => 'invalid']));
+
+        $target = ObjectManager::getInstance()->create(RegisterModuleForHyvaConfig::class, [
+            'moduleNames' => ['Foo_Bar1'],
+        ]);
+
+        $target->execute($observer);
+
+        $this->assertSame('invalid', $observer->getEvent()->getData('config'));
+    }
+
+    private function assertObserverEventNotContainsModule(Observer $observer, string $moduleName)
+    {
+        $componentRegistrar = ObjectManager::getInstance()->get(ComponentRegistrar::class);
+        $modulePath = (string)$componentRegistrar->getPath('module', $moduleName);
+        foreach ($observer->getEvent()->getConfig()['extensions'] as $extension) {
+            $this->assertNotSame($modulePath, $extension['src']);
+            $this->assertFalse(str_ends_with($modulePath, '/' . $extension['src']), $moduleName . ' was included');
+        }
+    }
+
+    private function getObserver(array $extensions = []): Observer
+    {
+        $config = new DataObject(['extensions' => $extensions]);
         $event = new DataObject(['config' => $config]);
         $observer = ObjectManager::getInstance()->create(Observer::class);
         $observer->setEvent($event);
@@ -82,7 +183,7 @@ class RegisterModuleForHyvaConfigTest extends TestCase
         $isModuleFound = false;
         $extensions = $observer->getEvent()->getConfig()['extensions'];
         foreach($extensions as $extension) {
-            if ($extension['src'] === $modulePath) {
+            if (is_array($extension) && ($extension['src'] ?? null) === $modulePath) {
                 $isModuleFound = true;
                 break;
             }
