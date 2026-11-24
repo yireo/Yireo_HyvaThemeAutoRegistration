@@ -48,6 +48,35 @@ Alternatively, you can include all your modules by configuring a module prefix:
 </config>
 ```
 
+A module prefix only matches the start of a module name: `Foo_` matches `Foo_Bar`, but not `AcmeFoo_Bar`. Empty prefixes are ignored.
+
+### Default prefixes and excluding modules
+By default, this module registers the prefixes `Yireo_` and `YireoTraining_`. Every matching module with a file `view/{base,frontend}/tailwind/tailwind.config.js` or `tailwind-source.css` is added to `app/etc/hyva-themes.json`. Note that the `tailwind.config.js` of every included module is executed by Node during the Hyvä theme build, so only include modules that you trust.
+
+To exclude specific modules, use the `skipModules` argument:
+
+```xml
+<type name="Yireo\HyvaThemeAutoRegistration\Observer\RegisterModuleForHyvaConfig">
+    <arguments>
+        <argument name="skipModules" xsi:type="array">
+            <item name="Yireo_Example" xsi:type="string">Yireo_Example</item>
+        </argument>
+    </arguments>
+</type>
+```
+
+To disable a default prefix, override its item with an empty value:
+
+```xml
+<type name="Yireo\HyvaThemeAutoRegistration\Observer\RegisterModuleForHyvaConfig">
+    <arguments>
+        <argument name="modulePrefixes" xsi:type="array">
+            <item name="YireoTraining_" xsi:type="string"></item>
+        </argument>
+    </arguments>
+</type>
+```
+
 ## Current status
 
 <!-- badges.test.start -->
