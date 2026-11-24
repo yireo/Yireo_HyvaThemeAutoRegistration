@@ -5,6 +5,7 @@ namespace Yireo\HyvaThemeAutoRegistration\Observer;
 
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Component\ComponentRegistrar;
+use Magento\Framework\DataObject;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Exception\FileSystemException;
@@ -15,7 +16,12 @@ class RegisterModuleForHyvaConfig implements ObserverInterface
 {
     /**
      * @param ComponentRegistrar $componentRegistrar
+     * @param DirectoryList $directoryList
+     * @param ModuleList $moduleList
+     * @param HyvaFiles $hyvaFiles
      * @param array $moduleNames
+     * @param array $modulePrefixes
+     * @param array $skipModules
      */
     public function __construct(
         private ComponentRegistrar $componentRegistrar,
@@ -29,7 +35,7 @@ class RegisterModuleForHyvaConfig implements ObserverInterface
     }
 
     /**
-     * @param Observer $event
+     * @param Observer $observer
      * @return void
      * @throws FileSystemException
      */
@@ -37,14 +43,25 @@ class RegisterModuleForHyvaConfig implements ObserverInterface
     {
         $event = $observer->getEvent();
         $config = $event->getData('config');
-        $extensions = $config->hasData('extensions') ? $config->getData('extensions') : [];
+        if (!$config instanceof DataObject) {
+            return;
+        }
+
+        $extensions = $config->getData('extensions');
+        if (!is_array($extensions)) {
+            $extensions = [];
+        }
 
         foreach ($this->moduleNames as $moduleName) {
+            if (!is_string($moduleName)) {
+                continue;
+            }
+
             $this->addModule($moduleName, $extensions);
         }
 
         foreach ($this->moduleList->getAll() as $moduleData) {
-            $moduleName = $moduleData['name'];
+            $moduleName = (string)($moduleData['name'] ?? '');
             if (false === $this->allowModuleName($moduleName)) {
                 continue;
             }
@@ -62,7 +79,11 @@ class RegisterModuleForHyvaConfig implements ObserverInterface
     private function allowModuleName(string $moduleName): bool
     {
         foreach ($this->modulePrefixes as $modulePrefix) {
-            if (str_contains($moduleName, $modulePrefix)) {
+            if (!is_string($modulePrefix) || $modulePrefix === '') {
+                continue;
+            }
+
+            if (str_starts_with($moduleName, $modulePrefix)) {
                 return true;
             }
         }
@@ -72,22 +93,23 @@ class RegisterModuleForHyvaConfig implements ObserverInterface
 
     private function getModulePath(string $moduleName): string
     {
-        $path = $this->componentRegistrar->getPath(ComponentRegistrar::MODULE, $moduleName);
-        if (false === strstr($path, $this->directoryList->getRoot())) {
-            return $path;
+        $path = (string)$this->componentRegistrar->getPath(ComponentRegistrar::MODULE, $moduleName);
+        if ($path === '') {
+            return '';
         }
 
-        if (defined('BP')) {
-            $path = str_replace(BP, '', $path);
+        $root = rtrim($this->directoryList->getRoot(), '/') . '/';
+        if (str_starts_with($path, $root)) {
+            return substr($path, strlen($root));
         }
 
-        return trim($path, '/');
+        return $path;
     }
 
     private function isAlreadyDefined(string $path, array $extensions = []): bool
     {
         foreach ($extensions as $extension) {
-            if ($extension['src'] === $path) {
+            if (is_array($extension) && ($extension['src'] ?? null) === $path) {
                 return true;
             }
         }
@@ -97,11 +119,15 @@ class RegisterModuleForHyvaConfig implements ObserverInterface
 
     private function addModule(string $moduleName, array &$extensions = [])
     {
-        if (in_array($moduleName, $this->skipModules)) {
+        if ($moduleName === '' || in_array($moduleName, $this->skipModules, true)) {
             return;
         }
 
         $modulePath = $this->getModulePath($moduleName);
+        if ($modulePath === '') {
+            return;
+        }
+
         if ($this->isAlreadyDefined($modulePath, $extensions)) {
             return;
         }
