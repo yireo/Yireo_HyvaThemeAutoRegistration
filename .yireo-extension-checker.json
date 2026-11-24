@@ -1,0 +1,6 @@
+{
+    "ignore": [
+        "Magento_Store",
+        "magento/module-store"
+    ]
+}
