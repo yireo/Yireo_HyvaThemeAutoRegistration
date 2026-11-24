@@ -31,7 +31,11 @@ class HyvaFiles
      */
     public function hasHyvaFiles(string $moduleName): bool
     {
-        $path = $this->componentRegistrar->getPath(ComponentRegistrar::MODULE, $moduleName);
+        $path = (string)$this->componentRegistrar->getPath(ComponentRegistrar::MODULE, $moduleName);
+        if ($path === '') {
+            return false;
+        }
+
         foreach ($this->getFiles() as $file) {
             if ($this->fileDriver->isExists($path . '/' . $file)) {
                 return true;
